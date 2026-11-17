@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2d6cdf">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Кошелёк">
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Мой кошелёк — учёт доходов и расходов</title>
+<style>
+:root{--blue:#2d6cdf;--blue2:#1f57c3;--bg:#f4f5f8;--card:#fff;--txt:#1d1f24;--mut:#8a8f99;--line:#eceef2;--green:#2f9e44;--red:#e03131}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,select{font:inherit;color:inherit}
+#app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:84px}
+header{background:linear-gradient(160deg,var(--blue),var(--blue2));color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 16px}
+#lock[hidden]{display:none}
+#lock{position:fixed;inset:0;background:linear-gradient(160deg,var(--blue),var(--blue2));z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;color:#fff}
+#lock .box{width:100%;max-width:360px;text-align:center}
+#lock input{width:100%;padding:14px;border-radius:14px;border:0;font-size:17px;margin:18px 0 10px;text-align:center}
+#lock button{width:100%;padding:14px;border-radius:14px;background:#fff;color:var(--blue);font-weight:700;font-size:16px}
+.hrow{display:flex;justify-content:space-between;align-items:center}
+.title{font-weight:700;font-size:18px}
+.accs{display:flex;gap:10px;margin-top:12px}
+.acc{flex:1;text-align:left;background:rgba(255,255,255,.14);border-radius:14px;padding:10px 12px;border:2px solid transparent;transition:.15s}
+.acc.on{background:rgba(255,255,255,.26);border-color:rgba(255,255,255,.7)}
+.acc small{display:block;opacity:.85;font-size:12px}
+.acc b{font-size:18px;white-space:nowrap}
+.period{display:flex;align-items:center;justify-content:space-between;margin-top:12px;background:rgba(0,0,0,.12);border-radius:12px;padding:4px}
+.period button.arr{width:40px;height:34px;font-size:20px;color:#fff;border-radius:9px}
+.period button.arr:disabled{opacity:.3}
+.plabel{font-weight:600}
+.modes{display:flex;gap:4px;margin-top:8px}
+.modes button{flex:1;color:#fff;opacity:.75;padding:6px;border-radius:9px;font-size:13px}
+.modes button.on{opacity:1;background:rgba(255,255,255,.2);font-weight:600}
+.card{background:var(--card);border-radius:16px;margin:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.sum3{display:flex;text-align:center}
+.sum3>div{flex:1}
+.sum3 small{color:var(--mut);font-size:12px;display:block}
+.sum3 b{font-size:16px}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.seg{display:flex;background:#eef0f4;border-radius:10px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;padding:7px;border-radius:8px;font-size:14px;color:var(--mut)}
+.seg button.on{background:#fff;color:var(--txt);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.donutWrap{display:flex;justify-content:center;position:relative}
+.donutC{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.donutC small{color:var(--mut)}
+.donutC b{font-size:20px}
+.crow{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.crow:last-child{border-bottom:0}
+.ico{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;flex:none}
+.grow{flex:1;min-width:0}
+.grow .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grow small{color:var(--mut);font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:4px;background:#eef0f4;border-radius:2px;margin-top:5px}
+.bar i{display:block;height:100%;border-radius:2px}
+.amt{font-weight:600;white-space:nowrap;text-align:right}
+.amt small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.day{display:flex;justify-content:space-between;color:var(--mut);font-size:13px;padding:14px 16px 4px;font-weight:600}
+.list{background:#fff;margin:0 12px;border-radius:14px;padding:0 12px}
+.empty{text-align:center;color:var(--mut);padding:30px 10px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 0 calc(6px + env(safe-area-inset-bottom));z-index:5}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--mut);gap:2px}
+nav button.on{color:var(--blue)}
+nav svg{width:24px;height:24px}
+.fab{position:fixed;z-index:6;bottom:calc(74px + env(safe-area-inset-bottom));right:max(16px,calc(50% - 244px));width:58px;height:58px;border-radius:50%;background:var(--blue);color:#fff;font-size:32px;line-height:1;box-shadow:0 6px 16px rgba(45,108,223,.45)}
+.search{display:flex;gap:8px;margin:12px}
+.search input{flex:1;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;font-size:15px}
+.chipx{background:#e7efff;color:var(--blue);border-radius:10px;padding:6px 10px;font-size:13px;margin:0 12px 6px;display:inline-flex;gap:6px;align-items:center}
+/* sheet */
+.shade{position:fixed;inset:0;background:rgba(15,20,30,.4);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#fff;width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));animation:up .2s ease}
+@keyframes up{from{transform:translateY(40px);opacity:.5}}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sh b{font-size:17px}
+.x{font-size:24px;color:var(--mut);width:36px;height:36px}
+.bigAmt{display:flex;align-items:baseline;gap:6px;border-bottom:2px solid var(--line);padding:6px 0;margin-bottom:12px}
+.bigAmt input{border:0;outline:0;font-size:36px;font-weight:700;width:100%;background:none}
+.bigAmt span{font-size:28px;color:var(--mut)}
+.f{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.f label{width:96px;color:var(--mut);font-size:14px;flex:none}
+.f input,.f select{flex:1;border:0;outline:0;background:none;font-size:15px;min-width:0}
+.catPick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.cp{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;border-radius:12px;font-size:11px;text-align:center;border:2px solid transparent;line-height:1.15}
+.cp.on{border-color:var(--blue);background:#f0f5ff}
+.cp .ico{width:34px;height:34px}
+.subl{font-size:12px;color:var(--mut);margin:10px 0 0;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.btn{width:100%;padding:14px;border-radius:14px;background:var(--blue);color:#fff;font-weight:600;font-size:16px;margin-top:14px}
+.btn.ghost{background:#fff;color:var(--red);border:1px solid #f3c6c6}
+.btn.sec{background:#eef0f4;color:var(--txt)}
+.row2{display:flex;gap:8px}
+.mut{color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 4px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:500}
+.lnk{color:var(--blue);font-weight:600}
+.toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;z-index:40;font-size:14px}
+.banner{background:#fff4e5;color:#8a5300;font-size:13px;padding:8px 12px;margin:12px;border-radius:12px}
+.set .crow{cursor:pointer}
+.tree .sub{padding-left:24px}
+.pill{font-size:11px;background:#eef0f4;border-radius:6px;padding:2px 6px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="hrow"><div class="title">Мой кошелёк</div><div id="sync" style="font-size:12px;opacity:.8"></div></div>
+    <div class="accs" id="accs"></div>
+    <div class="period"><button class="arr" id="prev">‹</button><div class="plabel" id="plabel"></div><button class="arr" id="next">›</button></div>
+    <div class="modes" id="modes"><button data-m="month">Месяц</button><button data-m="year">Год</button><button data-m="all">Всё время</button></div>
+  </header>
+  <div id="banner"></div>
+  <main id="main"><div class="empty">Загрузка…</div></main>
+</div>
+<button class="fab" id="fab" aria-label="Добавить">+</button>
+<nav id="nav">
+  <button data-v="overview" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l7 5"/></svg>Обзор</button>
+  <button data-v="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Операции</button>
+  <button data-v="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Отчёты</button>
+  <button data-v="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Ещё</button>
+</nav>
+<div id="layer"></div>
+<div id="lock" hidden><div class="box"><div style="font-size:52px">👛</div><div style="font-size:22px;font-weight:700;margin-top:8px">Мой кошелёк</div><div style="opacity:.85;margin-top:6px;font-size:14px">Введите код доступа. Один раз — потом телефон его запомнит.</div><form id="lf"><input id="lp" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="код доступа"><button>Открыть</button></form><div id="le" style="margin-top:10px;min-height:20px"></div></div></div>
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MONTHS=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+const MON_S=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const MON_G=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const WD=['вс','пн','вт','ср','чт','пт','сб'];
+const PAL=['#ff6b6b','#4dabf7','#51cf66','#fcc419','#845ef7','#ff922b','#20c997','#f06595','#5c7cfa','#94d82d','#e8590c','#15aabf','#ae3ec9','#868e96'];
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+// ---------- state ----------
+let H=null;                // history from Wallet backup
+const docs=new Map();      // user docs: id -> data
+let store=null;            // {put(id,data), del(id)}
+let S={acc:ls.get('w.acc',2),mode:ls.get('w.mode','month'),y:0,m:0,view:'overview',dType:'exp',q:'',fCat:null};
+{const d=new Date();S.y=d.getFullYear();S.m=d.getMonth();}
+
+// derived
+let CATS={},ACCS={},TX=[];
+function rebuild(){
+  CATS={};
+  H.cats.forEach(c=>CATS[c.id]={...c});
+  for(const [id,d] of docs){ if(id.startsWith('c-')){const cid=d.id; CATS[cid]={...(CATS[cid]||{}),...d};} }
+  ACCS={};H.accounts.forEach(a=>ACCS[a.id]={...a});
+  const st=docs.get('settings'); if(st&&st.accounts) for(const k in st.accounts) if(ACCS[k]) Object.assign(ACCS[k],st.accounts[k]);
+  const tops=Object.values(CATS).filter(c=>!c.parent).sort((a,b)=>a.type-b.type||a.order-b.order||a.id-b.id);
+  tops.forEach((c,i)=>c.color=c.color||PAL[i%PAL.length]);
+  Object.values(CATS).forEach(c=>{if(c.parent&&CATS[c.parent])c.color=CATS[c.parent].color; if(!c.color)c.color='#868e96'});
+  const tx=[];
+  for(const t of H.tx){
+    const o=docs.get('o-'+t[0]);
+    if(o&&o.deleted) continue;
+    const r={id:'h'+t[0],hid:t[0],date:t[1],acc:t[2],cat:t[3],amount:t[4],note:t[5]};
+    if(o) Object.assign(r,{date:o.date??r.date,acc:o.acc??r.acc,cat:o.cat??r.cat,amount:o.amount??r.amount,note:o.note??r.note});
+    tx.push(r);
+  }
+  for(const [id,d] of docs) if(id.startsWith('t-')) tx.push({id,date:d.date,acc:d.acc,cat:d.cat,amount:+d.amount,note:d.note||'',ts:d.ts||0});
+  tx.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.ts||0)-(a.ts||0)||(b.hid||0)-(a.hid||0));
+  TX=tx;
+}
+const isInc=t=>CATS[t.cat]&&CATS[t.cat].type===1;
+const topOf=id=>{let c=CATS[id];let g=0;while(c&&c.parent&&CATS[c.parent]&&g++<5)c=CATS[c.parent];return c||{id:0,title:'Без категории',color:'#868e96',type:0}};
+const catName=id=>CATS[id]?CATS[id].title||'—':'Без категории';
+function fmt(n,acc){const a=ACCS[acc]||{cur:''};const v=Math.abs(n);const s=v.toLocaleString('ru-RU',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2});return (n<0?'−':'')+s+' '+a.cur}
+function fmtK(n){const v=Math.abs(n);if(v>=1e6)return (n/1e6).toFixed(1).replace('.0','')+'М';if(v>=1e4)return Math.round(n/1e3)+'к';return Math.round(n)+''}
+function balance(acc){let b=0;for(const t of TX) if(t.acc===acc) b+=isInc(t)?t.amount:-t.amount;const st=ACCS[acc];return b+(st.initial||0)}
+function inPeriod(d){ if(S.mode==='all')return true; const y=+d.slice(0,4); if(S.mode==='year')return y===S.y; return y===S.y&&+d.slice(5,7)===S.m+1}
+const periodTx=()=>TX.filter(t=>t.acc===S.acc&&inPeriod(t.date));
+const sum=a=>a.reduce((s,t)=>s+t.amount,0);
+
+// ---------- header ----------
+function renderHeader(){
+  $('#accs').innerHTML=Object.values(ACCS).map(a=>`<button class="acc ${a.id===S.acc?'on':''}" data-a="${a.id}"><small>${esc(a.title)}</small><b>${fmt(balance(a.id),a.id)}</b></button>`).join('');
+  $('#plabel').textContent=S.mode==='month'?MONTHS[S.m][0].toUpperCase()+MONTHS[S.m].slice(1)+' '+S.y:S.mode==='year'?S.y+' год':'Всё время · с 2011';
+  $('#prev').disabled=$('#next').disabled=S.mode==='all';
+  document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
+}
+$('#accs').onclick=e=>{const b=e.target.closest('[data-a]');if(!b)return;S.acc=+b.dataset.a;ls.set('w.acc',S.acc);render()};
+$('#modes').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;S.mode=b.dataset.m;ls.set('w.mode',S.mode);render()};
+function shift(k){if(S.mode==='month'){S.m+=k;if(S.m<0){S.m=11;S.y--}if(S.m>11){S.m=0;S.y++}}else if(S.mode==='year')S.y+=k;render()}
+$('#prev').onclick=()=>shift(-1);$('#next').onclick=()=>shift(1);
+$('#nav').onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;S.view=b.dataset.v;document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x===b));render();window.scrollTo(0,0)};
+// swipe months
+{let x0=null;$('#main').addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});$('#main').addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(S.mode!=='all'&&Math.abs(dx)>80&&S.view!=='more')shift(dx<0?1:-1)},{passive:true});}
+
+// ---------- overview ----------
+function donut(parts,total,sz){
+  const r=sz/2-16,L=2*Math.PI*r;let a=0,s='';
+  if(!total) s=`<circle r="${r}" cx="${sz/2}" cy="${sz/2}" fill="none" stroke="#eef0f4" stroke-width="26"/>`;
+  parts.forEach(p=>{const fr=p.v/total;s+=`<circle r="${r}" cx="${sz/2}" cy="${sz/2}" fill="none" stroke="${p.color}" stroke-width="26" stroke-dasharray="${Math.max(fr*L-1.5,0.5)} ${L}" stroke-dashoffset="${-a*L}" transform="rotate(-90 ${sz/2} ${sz/2})"/>`;a+=fr});
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">${s}</svg>`;
+}
+function groupTop(arr){const m={};arr.forEach(t=>{const c=topOf(t.cat);(m[c.id]=m[c.id]||{id:c.id,title:c.title,color:c.color,v:0,n:0});m[c.id].v+=t.amount;m[c.id].n++});return Object.values(m).sort((a,b)=>b.v-a.v)}
+function renderOverview(){
+  const p=periodTx(),inc=p.filter(isInc),exp=p.filter(t=>!isInc(t));
+  const I=sum(inc),E=sum(exp);
+  const src=S.dType==='exp'?exp:inc,tot=S.dType==='exp'?E:I,parts=groupTop(src);
+  const recent=p.slice(0,5);
+  return `
+  <div class="card"><div class="sum3"><div><small>Доходы</small><b class="pos">${fmt(I,S.acc)}</b></div><div><small>Расходы</small><b class="neg">${fmt(E,S.acc)}</b></div><div><small>Итого</small><b>${fmt(I-E,S.acc)}</b></div></div></div>
+  <div class="card">
+    <div class="seg" id="dseg"><button data-t="exp" class="${S.dType==='exp'?'on':''}">Расходы</button><button data-t="inc" class="${S.dType==='inc'?'on':''}">Доходы</button></div>
+    <div class="donutWrap">${donut(parts,tot,210)}<div class="donutC"><small>${S.dType==='exp'?'Потрачено':'Получено'}</small><b>${fmt(tot,S.acc)}</b><small>${src.length} операц.</small></div></div>
+    <div style="margin-top:8px">${parts.length?parts.map(c=>`<button class="crow" data-top="${c.id}"><div class="ico" style="background:${c.color}">${esc((c.title||'?')[0])}</div><div class="grow"><div class="t">${esc(c.title)}</div><div class="bar"><i style="width:${(c.v/tot*100).toFixed(1)}%;background:${c.color}"></i></div></div><div class="amt">${fmt(c.v,S.acc)}<small>${(c.v/tot*100).toFixed(1)}%</small></div></button>`).join(''):'<div class="empty">Нет операций за этот период</div>'}</div>
+  </div>
+  ${recent.length?`<div class="card"><div class="hrow"><b>Последние операции</b><button class="lnk" id="toList">Все →</button></div>${recent.map(rowTx).join('')}</div>`:''}`;
+}
+function rowTx(t){
+  const c=CATS[t.cat]||{},tp=topOf(t.cat),d=new Date(t.date+'T12:00');
+  const sub=[c.parent?tp.title:'',t.note].filter(Boolean).join(' · ');
+  return `<button class="crow" data-tx="${t.id}"><div class="ico" style="background:${tp.color}">${esc((c.title||'?')[0])}</div><div class="grow"><div class="t">${esc(catName(t.cat))}</div><small>${esc(sub)||(S.view==='list'?'':d.getDate()+' '+MON_G[d.getMonth()])}</small></div><div class="amt ${isInc(t)?'pos':''}">${isInc(t)?'+':'−'}${fmt(t.amount,t.acc)}</div></button>`;
+}
+
+// ---------- list ----------
+function renderList(){
+  let p;
+  const q=S.q.trim().toLowerCase();
+  if(q){p=TX.filter(t=>t.acc===S.acc&&((t.note||'').toLowerCase().includes(q)||catName(t.cat).toLowerCase().includes(q)||String(t.amount).includes(q)))}
+  else p=periodTx();
+  if(S.fCat) p=p.filter(t=>t.cat===S.fCat||topOf(t.cat).id===S.fCat);
+  const shown=p.slice(0,600);
+  const days=[];let cur=null;
+  shown.forEach(t=>{if(!cur||cur.d!==t.date){cur={d:t.date,a:[]};days.push(cur)}cur.a.push(t)});
+  const I=sum(p.filter(isInc)),E=sum(p.filter(t=>!isInc(t)));
+  return `<div class="search"><input id="q" type="search" placeholder="Поиск по заметке, категории, сумме — за всё время" value="${esc(S.q)}"></div>
+  ${S.fCat?`<button class="chipx" id="clrCat">Категория: ${esc(catName(S.fCat))} ✕</button>`:''}
+  <div class="card" style="margin-top:4px"><div class="sum3"><div><small>Доходы</small><b class="pos">${fmt(I,S.acc)}</b></div><div><small>Расходы</small><b class="neg">${fmt(E,S.acc)}</b></div><div><small>${q?'Найдено':'Операций'}</small><b>${p.length}</b></div></div></div>
+  ${days.length?days.map(g=>{const d=new Date(g.d+'T12:00');const de=sum(g.a.filter(t=>!isInc(t))),di=sum(g.a.filter(isInc));return `<div class="day"><span>${d.getDate()} ${MON_G[d.getMonth()]}${d.getFullYear()!==new Date().getFullYear()||S.mode!=='month'?' '+d.getFullYear():''}, ${WD[d.getDay()]}</span><span>${di?'+'+fmt(di,S.acc)+' ':''}${de?'−'+fmt(de,S.acc):''}</span></div><div class="list">${g.a.map(rowTx).join('')}</div>`}).join(''):'<div class="empty">Ничего не найдено</div>'}
+  ${p.length>shown.length?`<div class="empty">Показаны первые ${shown.length} из ${p.length}. Уточните поиск или период.</div>`:''}`;
+}
+
+// ---------- reports ----------
+function renderReports(){
+  const acc=S.acc;const rows=[];
+  if(S.mode==='all'){
+    const y0=+((TX.filter(t=>t.acc===acc).slice(-1)[0]||{date:'2011'}).date.slice(0,4)),y1=new Date().getFullYear();
+    for(let y=y0;y<=y1;y++){const a=TX.filter(t=>t.acc===acc&&+t.date.slice(0,4)===y);rows.push({l:String(y),k:'y'+y,i:sum(a.filter(isInc)),e:sum(a.filter(t=>!isInc(t)))})}
+  }else{
+    const y=S.y;for(let m=0;m<12;m++){const key=y+'-'+String(m+1).padStart(2,'0');const a=TX.filter(t=>t.acc===acc&&t.date.startsWith(key));rows.push({l:MON_S[m],k:'m'+m,i:sum(a.filter(isInc)),e:sum(a.filter(t=>!isInc(t))),hi:S.mode==='month'&&m===S.m})}
+  }
+  const mx=Math.max(1,...rows.flatMap(r=>[r.i,r.e]));
+  const W=Math.max(320,rows.length*34),H0=180,bw=(W-30)/rows.length;
+  let svg=`<svg width="100%" viewBox="0 0 ${W} ${H0+24}" style="display:block">`;
+  [0.25,0.5,0.75,1].forEach(f=>{const y=H0-f*(H0-10);svg+=`<line x1="30" x2="${W}" y1="${y}" y2="${y}" stroke="#eef0f4"/><text x="0" y="${y+4}" font-size="10" fill="#8a8f99">${fmtK(mx*f)}</text>`});
+  rows.forEach((r,i)=>{const x=30+i*bw,w=bw*0.36;const hi=r.i/mx*(H0-10),he=r.e/mx*(H0-10);
+    if(r.hi)svg+=`<rect x="${x}" y="0" width="${bw}" height="${H0+22}" fill="#f0f5ff" rx="6"/>`;
+    svg+=`<rect x="${x+bw*0.12}" y="${H0-hi}" width="${w}" height="${hi}" rx="3" fill="#51cf66"/><rect x="${x+bw*0.12+w+2}" y="${H0-he}" width="${w}" height="${he}" rx="3" fill="#ff6b6b"/><text x="${x+bw/2}" y="${H0+16}" font-size="11" text-anchor="middle" fill="#8a8f99">${r.l}</text>`});
+  svg+='</svg>';
+  const TI=sum(rows.map(r=>({amount:r.i}))),TE=sum(rows.map(r=>({amount:r.e})));
+  // categories table for the period (year or all)
+  const p=TX.filter(t=>t.acc===acc&&(S.mode==='all'||+t.date.slice(0,4)===S.y));
+  const ge=groupTop(p.filter(t=>!isInc(t))),gi=groupTop(p.filter(isInc));
+  const nMon=rows.filter(r=>r.i||r.e).length||1;
+  return `<div class="card"><div class="hrow" style="margin-bottom:8px"><b>${S.mode==='all'?'По годам':'По месяцам, '+S.y}</b><span class="mut" style="font-size:12px"><b style="color:#51cf66">■</b> доход <b style="color:#ff6b6b">■</b> расход</span></div><div style="overflow-x:auto">${svg}</div></div>
+  <div class="card"><table><tr><th>${S.mode==='all'?'Год':'Месяц'}</th><th>Доход</th><th>Расход</th><th>Итог</th></tr>
+  ${rows.map(r=>`<tr${r.hi?' style="background:#f0f5ff"':''}><td>${r.l}</td><td class="pos">${r.i?fmtK(r.i):'—'}</td><td class="neg">${r.e?fmtK(r.e):'—'}</td><td>${r.i||r.e?fmtK(r.i-r.e):'—'}</td></tr>`).join('')}
+  <tr style="font-weight:700"><td>Всего</td><td class="pos">${fmtK(TI)}</td><td class="neg">${fmtK(TE)}</td><td>${fmtK(TI-TE)}</td></tr></table>
+  <div class="mut" style="font-size:12px;margin-top:8px">В среднем за ${S.mode==='all'?'год':'месяц'}: расход ${fmt(Math.round(TE/nMon),acc)}, доход ${fmt(Math.round(TI/nMon),acc)}</div></div>
+  <div class="card"><b>Расходы по категориям · ${S.mode==='all'?'всё время':S.y}</b>${ge.map(c=>`<button class="crow" data-top="${c.id}"><div class="ico" style="background:${c.color}">${esc(c.title[0]||'?')}</div><div class="grow"><div class="t">${esc(c.title)}</div><small>${c.n} операц.</small></div><div class="amt">${fmt(c.v,acc)}<small>${TE?(c.v/TE*100).toFixed(1):0}%</small></div></button>`).join('')||'<div class="empty">Нет расходов</div>'}</div>
+  <div class="card"><b>Доходы по категориям</b>${gi.map(c=>`<button class="crow" data-top="${c.id}"><div class="ico" style="background:${c.color}">${esc(c.title[0]||'?')}</div><div class="grow"><div class="t">${esc(c.title)}</div><small>${c.n} операц.</small></div><div class="amt pos">${fmt(c.v,acc)}</div></button>`).join('')||'<div class="empty">Нет доходов</div>'}</div>`;
+}
+
+// ---------- more ----------
+function renderMore(){
+  const tops=Object.values(CATS).filter(c=>!c.parent&&!c.hidden).sort((a,b)=>a.type-b.type||a.order-b.order);
+  const kids=id=>Object.values(CATS).filter(c=>c.parent===id&&!c.hidden).sort((a,b)=>a.order-b.order);
+  const used={};TX.forEach(t=>used[t.cat]=(used[t.cat]||0)+1);
+  return `<div class="card set"><b>Счета</b>${Object.values(ACCS).map(a=>`<button class="crow" data-editacc="${a.id}"><div class="ico" style="background:var(--blue)">${esc(a.cur)}</div><div class="grow"><div class="t">${esc(a.title)}</div><small>${TX.filter(t=>t.acc===a.id).length} операций</small></div><div class="amt">${fmt(balance(a.id),a.id)}</div></button>`).join('')}</div>
+  <div class="card set"><b>Регулярные платежи</b><div class="mut" style="font-size:12px;margin:4px 0">Перенесены из Wallet. Нажмите, чтобы внести платёж за сегодня.</div>${H.recurring.map(r=>`<button class="crow" data-rec="${r.id}"><div class="ico" style="background:${topOf(r.cat).color}">↻</div><div class="grow"><div class="t">${esc(r.title||catName(r.cat))}</div><small>${esc(catName(r.cat))} · ежемесячно · ${esc(ACCS[r.acc].title)}</small></div><div class="amt">${fmt(r.amount,r.acc)}</div></button>`).join('')}</div>
+  <div class="card set tree"><div class="hrow"><b>Категории</b><button class="lnk" id="addCat">+ Добавить</button></div>
+  ${['Расходы','Доходы'].map((nm,ti)=>`<div class="subl">${nm}</div>`+tops.filter(c=>c.type===ti).map(c=>`<button class="crow" data-editcat="${c.id}"><div class="ico" style="background:${c.color}">${esc((c.title||'?')[0])}</div><div class="grow"><div class="t">${esc(c.title)}</div></div><span class="pill">${used[c.id]||0}</span></button>`+kids(c.id).map(k=>`<button class="crow sub" data-editcat="${k.id}"><div class="grow"><div class="t">${esc(k.title)}</div></div><span class="pill">${used[k.id]||0}</span></button>`).join('')).join('')).join('')}</div>
+  <div class="card"><b>Резервная копия</b><div class="mut" style="font-size:13px;margin:4px 0 0">Новые записи хранятся только на этом устройстве. Сохраняйте копию раз в неделю (например, в «Файлы» или iCloud) — при смене телефона просто восстановите её.${ls.get('w.lastBackup','')?' Последняя копия: '+ls.get('w.lastBackup',''):' Копий ещё не было.'}</div><div class="row2"><button class="btn" id="bk">Сохранить копию</button><label class="btn sec" style="text-align:center">Восстановить<input type="file" id="rs" accept=".json" hidden></label></div></div>
+  <div class="card"><b>Экспорт</b><div class="mut" style="font-size:13px;margin:4px 0 0">Все операции обоих счетов в CSV для Excel.</div><button class="btn sec" id="csv">Скачать CSV</button></div>
+  <div class="card"><b>Выход</b><div class="mut" style="font-size:13px;margin:4px 0">Забыть код доступа на этом устройстве (записи останутся).</div><button class="btn sec" id="lockNow">Заблокировать</button></div>
+  <div class="card mut" style="font-size:12px">История: ${H.tx.length} операций из бэкапа Wallet (март 2011 — ноябрь 2026). Новые и изменённые операции: ${[...docs.keys()].filter(k=>k.startsWith('t-')||k.startsWith('o-')).length}.</div>`;
+}
+
+// ---------- render ----------
+function render(){
+  if(!H)return;
+  renderHeader();
+  const v=S.view;
+  $('#main').innerHTML=v==='overview'?renderOverview():v==='list'?renderList():v==='reports'?renderReports():renderMore();
+  const q=$('#q');if(q){q.oninput=()=>{S.q=q.value;clearTimeout(q._t);q._t=setTimeout(()=>{const pos=q.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(pos,pos)},250)}}
+}
+$('#main').addEventListener('click',e=>{
+  let b;
+  if(b=e.target.closest('#dseg button')){S.dType=b.dataset.t;render();return}
+  if(e.target.closest('#toList')){goList();return}
+  if(e.target.closest('#clrCat')){S.fCat=null;render();return}
+  if(b=e.target.closest('[data-tx]')){openTx(TX.find(t=>t.id===b.dataset.tx));return}
+  if(b=e.target.closest('[data-top]')){openCatSheet(+b.dataset.top);return}
+  if(b=e.target.closest('[data-rec]')){const r=H.recurring.find(x=>x.id==b.dataset.rec);openTx(null,{acc:r.acc,cat:r.cat,amount:r.amount,note:r.title});return}
+  if(b=e.target.closest('[data-editacc]')){editAcc(+b.dataset.editacc);return}
+  if(b=e.target.closest('[data-editcat]')){editCat(+b.dataset.editcat);return}
+  if(e.target.closest('#addCat')){editCat(null);return}
+  if(e.target.closest('#csv')){exportCsv();return}
+  if(e.target.closest('#bk')){backup();return}
+  if(e.target.closest('#lockNow')){try{localStorage.removeItem('w.key')}catch(_){}location.reload();return}
+});
+function goList(){S.view='list';document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.v==='list'));render();window.scrollTo(0,0)}
+
+// ---------- sheets ----------
+function sheet(html){$('#layer').innerHTML=`<div class="shade" id="shade"><div class="sheet">${html}</div></div>`;$('#shade').onclick=e=>{if(e.target.id==='shade'||e.target.closest('.x'))close()};document.body.style.overflow='hidden'}
+function close(){$('#layer').innerHTML='';document.body.style.overflow=''}
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
+
+function openCatSheet(topId){
+  const p=periodTx().filter(t=>topOf(t.cat).id===topId);const tc=CATS[topId]||{title:'Без категории'};
+  const m={};p.forEach(t=>{(m[t.cat]=m[t.cat]||{id:t.cat,v:0,n:0});m[t.cat].v+=t.amount;m[t.cat].n++});
+  const subs=Object.values(m).sort((a,b)=>b.v-a.v),tot=sum(p);
+  sheet(`<div class="sh"><b>${esc(tc.title)}</b><button class="x">×</button></div>
+  <div class="mut" style="font-size:13px">${$('#plabel').textContent} · ${esc(ACCS[S.acc].title)} · ${fmt(tot,S.acc)}</div>
+  ${subs.map(s=>`<div class="crow"><div class="grow"><div class="t">${esc(s.id===topId?tc.title+' (без подкатегории)':catName(s.id))}</div><div class="bar"><i style="width:${(s.v/tot*100).toFixed(1)}%;background:${tc.color}"></i></div></div><div class="amt">${fmt(s.v,S.acc)}<small>${s.n} оп.</small></div></div>`).join('')}
+  <button class="btn" id="showOps">Показать операции</button>`);
+  $('#showOps').onclick=()=>{S.fCat=topId;S.q='';close();goList()};
+}
+
+function recentCats(type,acc){const cnt={};let n=0;for(const t of TX){if(t.acc!==acc||(CATS[t.cat]||{}).type!==type)continue;cnt[t.cat]=(cnt[t.cat]||0)+1;if(++n>150)break}return Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>+x[0]).filter(id=>CATS[id]&&!CATS[id].hidden)}
+function openTx(t,preset){
+  const isNew=!t;const f=t?{...t}:{date:todayStr(),acc:S.acc,cat:null,amount:'',note:'',...(preset||{})};
+  let type=f.cat!=null&&CATS[f.cat]?CATS[f.cat].type:(S.view==='overview'&&S.dType==='inc'?1:0);
+  let openTop=null;
+  function catGrid(){
+    const rec=recentCats(type,f.acc);
+    const tops=Object.values(CATS).filter(c=>c.type===type&&!c.parent&&!c.hidden).sort((a,b)=>a.order-b.order);
+    const kids=id=>Object.values(CATS).filter(c=>c.parent===id&&!c.hidden).sort((a,b)=>a.order-b.order);
+    const cell=(c,lbl)=>`<button class="cp ${f.cat===c.id?'on':''}" data-c="${c.id}"><div class="ico" style="background:${topOf(c.id).color}">${esc((c.title||'?')[0])}</div>${esc(lbl||c.title)}</button>`;
+    let h='';
+    if(rec.length) h+=`<div class="subl">Частые</div><div class="catPick">${rec.map(id=>cell(CATS[id])).join('')}</div>`;
+    h+=`<div class="subl">Все категории</div><div class="catPick">${tops.map(c=>`<button class="cp ${openTop===c.id||topOf(f.cat).id===c.id&&f.cat!=null?'on':''}" data-t="${c.id}"><div class="ico" style="background:${c.color}">${esc((c.title||'?')[0])}</div>${esc(c.title)}</button>`).join('')}</div>`;
+    if(openTop){h+=`<div class="subl">${esc(CATS[openTop].title)}</div><div class="catPick">${cell(CATS[openTop],'Без подкатегории')}${kids(openTop).map(c=>cell(c)).join('')}</div>`}
+    return h;
+  }
+  function draw(){
+    sheet(`<div class="sh"><b>${isNew?'Новая операция':'Операция'}</b><button class="x">×</button></div>
+    <div class="seg" id="tseg"><button data-t="0" class="${type===0?'on':''}">Расход</button><button data-t="1" class="${type===1?'on':''}">Доход</button></div>
+    <div class="bigAmt"><span style="color:${type?'var(--green)':'var(--red)'}">${type?'+':'−'}</span><input id="fAmt" inputmode="decimal" placeholder="0" value="${f.amount}"><span>${esc(ACCS[f.acc].cur)}</span></div>
+    <div class="f"><label>Категория</label><b id="fCatName" style="flex:1">${f.cat!=null&&CATS[f.cat]?esc((CATS[f.cat].parent?topOf(f.cat).title+' › ':'')+catName(f.cat)):'<span class="mut">выберите ниже</span>'}</b></div>
+    <div id="grid">${catGrid()}</div>
+    <div class="f"><label>Счёт</label><select id="fAcc">${Object.values(ACCS).map(a=>`<option value="${a.id}" ${a.id===f.acc?'selected':''}>${esc(a.title)} (${esc(a.cur)})</option>`).join('')}</select></div>
+    <div class="f"><label>Дата</label><input id="fDate" type="date" value="${f.date}"></div>
+    <div class="f"><label>Заметка</label><input id="fNote" placeholder="необязательно" value="${esc(f.note)}"></div>
+    <button class="btn" id="fSave">${isNew?'Добавить':'Сохранить'}</button>
+    ${isNew?'':'<button class="btn ghost" id="fDel">Удалить</button>'}`);
+    const keep=()=>{f.amount=$('#fAmt').value;f.note=$('#fNote').value;f.date=$('#fDate').value;f.acc=+$('#fAcc').value};
+    $('#tseg').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;keep();const nt=+b.dataset.t;if(nt!==type){type=nt;f.cat=null;openTop=null}draw()};
+    $('#grid').onclick=e=>{let b;keep();
+      if(b=e.target.closest('[data-t]')){const id=+b.dataset.t;openTop=openTop===id?null:id;const hasKids=Object.values(CATS).some(c=>c.parent===id&&!c.hidden);if(!hasKids){f.cat=id;openTop=null}draw();return}
+      if(b=e.target.closest('[data-c]')){f.cat=+b.dataset.c;openTop=null;draw();setTimeout(()=>{const s=$('#fSave');s&&s.scrollIntoView({block:'nearest'})},0)}};
+    $('#fAcc').onchange=()=>{keep();draw()};
+    $('#fSave').onclick=async()=>{keep();const amt=parseFloat(String(f.amount).replace(/\s/g,'').replace(',','.'));
+      if(!(amt>0)){toast('Введите сумму');$('#fAmt').focus();return}
+      if(f.cat==null){toast('Выберите категорию');return}
+      if(!/^\d{4}-\d\d-\d\d$/.test(f.date)){toast('Укажите дату');return}
+      const rec={date:f.date,acc:f.acc,cat:f.cat,amount:Math.round(amt*100)/100,note:f.note.trim()};
+      if(isNew) await put('t-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),{...rec,ts:Date.now()});
+      else if(t.hid) await put('o-'+t.hid,rec);
+      else await put(t.id,{...rec,ts:docs.get(t.id).ts||Date.now()});
+      close();toast(isNew?'Добавлено':'Сохранено');
+      if(isNew&&S.mode==='month'){const d=new Date(f.date+'T12:00');S.y=d.getFullYear();S.m=d.getMonth()}
+      S.acc=f.acc;render()};
+    const del=$('#fDel');if(del)del.onclick=async()=>{if(del.dataset.c!=='1'){del.dataset.c='1';del.textContent='Нажмите ещё раз, чтобы удалить';return}
+      if(t.hid) await put('o-'+t.hid,{deleted:true}); else await remove(t.id);close();toast('Удалено');render()};
+    if(isNew&&!f.amount) setTimeout(()=>{const a=$('#fAmt');a&&a.focus()},60);
+  }
+  draw();
+}
+function editAcc(id){const a=ACCS[id];sheet(`<div class="sh"><b>Счёт</b><button class="x">×</button></div><div class="f"><label>Название</label><input id="aT" value="${esc(a.title)}"></div><div class="f"><label>Валюта</label><input id="aC" value="${esc(a.cur)}"></div><div class="f"><label>Корректировка</label><input id="aI" inputmode="decimal" value="${a.initial||0}"></div><div class="mut" style="font-size:12px;margin-top:6px">Корректировка прибавляется к балансу, если остаток в приложении не совпадает с реальным.</div><button class="btn" id="aS">Сохранить</button>`);
+  $('#aS').onclick=async()=>{const st=JSON.parse(JSON.stringify(docs.get('settings')||{accounts:{}}));st.accounts=st.accounts||{};st.accounts[id]={title:$('#aT').value.trim()||a.title,cur:$('#aC').value.trim()||a.cur,initial:parseFloat($('#aI').value.replace(',','.'))||0};await put('settings',st);close();render()}}
+function editCat(id){const c=id?CATS[id]:{title:'',type:0,parent:null};const tops=Object.values(CATS).filter(x=>!x.parent&&!x.hidden&&x.id!==id);
+  sheet(`<div class="sh"><b>${id?'Категория':'Новая категория'}</b><button class="x">×</button></div>
+  <div class="f"><label>Название</label><input id="cT" value="${esc(c.title)}"></div>
+  <div class="f"><label>Тип</label><select id="cTy"><option value="0" ${c.type===0?'selected':''}>Расход</option><option value="1" ${c.type===1?'selected':''}>Доход</option></select></div>
+  <div class="f"><label>Входит в</label><select id="cP"><option value="">— основная категория —</option>${tops.map(t=>`<option value="${t.id}" ${c.parent===t.id?'selected':''}>${esc(t.title)} (${t.type?'доход':'расход'})</option>`).join('')}</select></div>
+  <button class="btn" id="cS">Сохранить</button>${id?'<button class="btn ghost" id="cH">Скрыть категорию</button>':''}`);
+  $('#cS').onclick=async()=>{const title=$('#cT').value.trim();if(!title){toast('Введите название');return}
+    const parent=$('#cP').value?+$('#cP').value:null;const type=parent?CATS[parent].type:+$('#cTy').value;
+    const nid=id||Math.max(1000,...Object.keys(CATS).map(Number))+1;
+    await put('c-'+nid,{id:nid,title,type,parent,order:c.order??99});close();render()};
+  const h=$('#cH');if(h)h.onclick=async()=>{await put('c-'+id,{id,hidden:true});close();toast('Категория скрыта, старые операции остались');render()};
+}
+function saveFile(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function backup(){saveFile('koshelek_backup_'+todayStr()+'.json',JSON.stringify({app:'koshelek',v:1,docs:Object.fromEntries(docs)}),'application/json');ls.set('w.lastBackup',todayStr());toast('Копия сохранена в «Загрузки»');render()}
+function restore(file){const r=new FileReader();r.onload=async()=>{try{const j=JSON.parse(r.result);if(!j.docs)throw 0;docs.clear();for(const k in j.docs)docs.set(k,j.docs[k]);ls.set('w.docs',j.docs);rebuild();render();toast('Восстановлено: '+Object.keys(j.docs).length+' записей')}catch(e){toast('Это не файл резервной копии')}};r.readAsText(file)}
+async function exportCsv(){
+  const rows=[['Дата','Счёт','Тип','Категория','Подкатегория','Сумма','Валюта','Заметка']];
+  [...TX].reverse().forEach(t=>{const c=CATS[t.cat]||{};const tp=topOf(t.cat);rows.push([t.date,ACCS[t.acc].title,isInc(t)?'Доход':'Расход',tp.title,c.parent?c.title:'',String(t.amount).replace('.',','),ACCS[t.acc].cur,t.note||''])});
+  const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  saveFile('koshelek_'+todayStr()+'.csv',csv,'text/csv');
+}
+
+// ---------- storage ----------
+async function put(id,data){docs.set(id,data);rebuild();try{await store.put(id,data)}catch(e){console.error(e);toast('Не удалось сохранить: '+(e&&e.code||'ошибка'))}}
+async function remove(id){docs.delete(id);rebuild();try{await store.del(id)}catch(e){toast('Не удалось удалить')}}
+function localStore(){const k='w.docs';const all=ls.get(k,{});for(const id in all)docs.set(id,all[id]);
+  return{put:async(id,d)=>{const a=ls.get(k,{});a[id]=d;ls.set(k,a)},del:async id=>{const a=ls.get(k,{});delete a[id];ls.set(k,a)}}}
+async function initStore(){
+  let db=null,uid=null;
+  try{if(window.claude&&claude.use){db=await claude.use('db');const u=await claude.use('user');uid=u?await u.id():null}}catch(e){db=null}
+  if(!db||!uid){store=localStore();$('#banner').innerHTML='<div class="banner">Облачное сохранение недоступно в этом окне — новые записи сохраняются только в этом браузере.</div>';$('#sync').textContent='локально';rebuild();render();return}
+  const col=db.collection('data/users/'+uid);
+  store={put:(id,d)=>col.doc(id).set(d),del:id=>col.doc(id).delete()};
+  $('#sync').textContent='синхронизация…';
+  const timer=setTimeout(()=>{$('#sync').textContent='нет связи'},10000);
+  col.onSnapshot(snap=>{
+    docs.clear();snap.docs.forEach(d=>{if(d.exists)docs.set(d.id,d.data())});
+    if(!snap.metadata.fromCache){clearTimeout(timer);$('#sync').textContent='☁︎ сохранено'}
+    rebuild();if(!$('#layer').innerHTML)render();else renderHeader();
+  },err=>{clearTimeout(timer);$('#sync').textContent='нет связи';console.error(err)});
+}
+$('#fab').onclick=()=>openTx(null);
+$('#main').addEventListener('change',e=>{if(e.target.id==='rs'&&e.target.files[0])restore(e.target.files[0])});
+
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+let ENC=null;
+async function decryptWith(raw){const k=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(ENC.iv)},k,b64(ENC.ct));return JSON.parse(new TextDecoder().decode(pt))}
+async function derive(pw){const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:b64(ENC.salt),iterations:ENC.it,hash:'SHA-256'},base,256))}
+function start(d){H=d;store=localStore();$('#sync').textContent='📱 на устройстве';$('#lock').hidden=true;rebuild();render();try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}
+function showLock(){$('#lock').hidden=false;$('#lf').onsubmit=async e=>{e.preventDefault();const pw=$('#lp').value.trim().toLowerCase();if(!pw)return;$('#le').textContent='Проверяю…';
+  try{const raw=await derive(pw);const d=await decryptWith(raw);ls.set('w.key',btoa(String.fromCharCode(...raw)));$('#le').textContent='';start(d)}catch(err){$('#le').textContent='Неверный код'}}}
+fetch('data.enc.json',{cache:'no-cache'}).then(r=>r.json()).then(async enc=>{ENC=enc;const k=ls.get('w.key',null);
+  if(k){try{start(await decryptWith(b64(k)));return}catch(e){}}showLock()}).catch(()=>{$('#main').innerHTML='<div class="empty">Не удалось загрузить данные. Проверьте интернет.</div>'});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
